@@ -47,13 +47,7 @@
                         <Label Grid.Column="1" Text="{Binding CurrentDelta, StringFormat='ΔL: {0:F1} мм'}" TextColor="#F59E0B" FontAttributes="Bold" FontSize="13"/>
                     </Grid>
 
-                    <GraphicsView HeightRequest="130" HorizontalOptions="FillAndExpand">
-                        <GraphicsView.Drawable>
-                            <drawables:LegLengthDiscrepancyDrawable 
-                                LeftOffset="{Binding LeftMalleolus}" 
-                                RightOffset="{Binding RightMalleolus}"/>
-                        </GraphicsView.Drawable>
-                    </GraphicsView>
+                    <GraphicsView x:Name="LegsGraphicsView" HeightRequest="130" HorizontalOptions="FillAndExpand"/>
 
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                         <VerticalStackLayout Grid.Column="0" Spacing="4">
@@ -124,11 +118,7 @@
             <Border BackgroundColor="#1E293B" Padding="14" Stroke="#334155" StrokeShape="RoundRectangle 14">
                 <VerticalStackLayout Spacing="10">
                     <Label Text="Тест 4: Торсия большеберцовой кости относительно мыщелков" TextColor="#38BDF8" FontAttributes="Bold" FontSize="14"/>
-                    <GraphicsView HeightRequest="150" HorizontalOptions="FillAndExpand">
-                        <GraphicsView.Drawable>
-                            <drawables:TibialTorsionPalimpsestDrawable State="{Binding TibialState}"/>
-                        </GraphicsView.Drawable>
-                    </GraphicsView>
+                    <GraphicsView x:Name="TibialGraphicsView" HeightRequest="150" HorizontalOptions="FillAndExpand"/>
                     <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
                         <Button Text="Недокрут внутрь" Command="{Binding SetTibialStateCommand}" CommandParameter="UnderRotationInward" 
                                 BackgroundColor="{Binding TibialState, Converter={StaticResource EnumToColorConverter}, ConverterParameter='UnderRotationInward'}" 
@@ -196,21 +186,11 @@
                     <Label Text="Спецификация индивидуальной коррекции:" TextColor="#38BDF8" FontAttributes="Bold" FontSize="14"/>
 
                     <!-- КАНВАС 1: ПРОФИЛЬ КЛИНА И СТОЯЧАЯ ВОЛНА СТРЕССА -->
-                    <GraphicsView HeightRequest="100">
-                        <GraphicsView.Drawable>
-                            <drawables:AdaptiveWedgeDrawable 
-                                HasConflict="{Binding EvaluationResult.IsComplexTorsionConflict}" 
-                                Phase="{Binding WavePhase}"/>
-                        </GraphicsView.Drawable>
-                    </GraphicsView>
+                    <GraphicsView x:Name="AdaptiveWedgeGraphicsView" HeightRequest="100"/>
 
                     <!-- КАНВАС 2: ПЛАНТАРНАЯ КАРТА СТЕЛЬКИ С ТОПОГРАФИЕЙ КЛИНЬЕВ -->
                     <Label Text="Топография наложения клиньев на стельке:" TextColor="#94A3B8" FontSize="11"/>
-                    <GraphicsView HeightRequest="190">
-                        <GraphicsView.Drawable>
-                            <drawables:PlantarInsoleMapDrawable Prescriptions="{Binding EvaluationResult.Prescriptions}"/>
-                        </GraphicsView.Drawable>
-                    </GraphicsView>
+                    <GraphicsView x:Name="PlantarMapGraphicsView" HeightRequest="190"/>
 
                     <!-- СПИСОК ВЫПИСАННЫХ КЛИНЬЕВ -->
                     <Label Text="Назначенные элементы:" TextColor="#E2E8F0" FontSize="12" FontAttributes="Bold"/>

@@ -1,31 +1,14 @@
 namespace OrthoClinic.UI.Drawables;
 
-using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
 
 /// <summary>
 /// Векторный канвас Теста 1: Топология натяжения и асимметрия длины нижних конечностей.
-/// Наследует BindableObject для реактивной привязки данных в XAML.
 /// </summary>
-public sealed class LegLengthDiscrepancyDrawable : BindableObject, IDrawable
+public sealed class LegLengthDiscrepancyDrawable : IDrawable
 {
-    public static readonly BindableProperty LeftOffsetProperty = BindableProperty.Create(
-        nameof(LeftOffset), typeof(double), typeof(LegLengthDiscrepancyDrawable), 0.0);
-
-    public static readonly BindableProperty RightOffsetProperty = BindableProperty.Create(
-        nameof(RightOffset), typeof(double), typeof(LegLengthDiscrepancyDrawable), 0.0);
-
-    public double LeftOffset
-    {
-        get => (double)GetValue(LeftOffsetProperty);
-        set => SetValue(LeftOffsetProperty, value);
-    }
-
-    public double RightOffset
-    {
-        get => (double)GetValue(RightOffsetProperty);
-        set => SetValue(RightOffsetProperty, value);
-    }
+    public double LeftOffset { get; set; }
+    public double RightOffset { get; set; }
 
     public void Draw(ICanvas canvas, RectF dirtyRect)
     {

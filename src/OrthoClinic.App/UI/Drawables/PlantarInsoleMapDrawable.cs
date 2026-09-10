@@ -1,6 +1,5 @@
 namespace OrthoClinic.UI.Drawables;
 
-using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
 using OrthoClinic.Core.Domain;
 
@@ -8,16 +7,9 @@ using OrthoClinic.Core.Domain;
 /// Интерактивная карта плантарной поверхности стопы и ортопедической стельки
 /// с визуализацией точных зон наложения выписанных клиньев и их толщин.
 /// </summary>
-public sealed class PlantarInsoleMapDrawable : BindableObject, IDrawable
+public sealed class PlantarInsoleMapDrawable : IDrawable
 {
-    public static readonly BindableProperty PrescriptionsProperty = BindableProperty.Create(
-        nameof(Prescriptions), typeof(IReadOnlyList<WedgeItemPrescription>), typeof(PlantarInsoleMapDrawable), null);
-
-    public IReadOnlyList<WedgeItemPrescription>? Prescriptions
-    {
-        get => (IReadOnlyList<WedgeItemPrescription>?)GetValue(PrescriptionsProperty);
-        set => SetValue(PrescriptionsProperty, value);
-    }
+    public IReadOnlyList<WedgeItemPrescription>? Prescriptions { get; set; }
 
     public void Draw(ICanvas canvas, RectF dirtyRect)
     {
