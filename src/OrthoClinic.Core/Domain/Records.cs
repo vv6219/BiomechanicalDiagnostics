@@ -29,7 +29,14 @@ public sealed record WedgeItemPrescription(
     string ControlTestMandate,
     MaterialDurometerShoreA RecommendedDurometer = MaterialDurometerShoreA.ShoreA45_Medium,
     int InsoleQuadrant = 1,
-    double NominalThicknessMm = 0.0
+    double NominalThicknessMm = 0.0,
+    string TitleRu = "",
+    string AnatomicalZone = "",
+    string ForceVectorRationale = "",
+    string AdaptiveFormulaBreakdown = "",
+    string InstallationProtocol = "",
+    string MapColorHex = "#38BDF8",
+    bool IsSegmentClamped = false
 );
 
 /// <summary>
@@ -44,7 +51,11 @@ public sealed record HorizontalDiagnosticReport(
     KineticChainRiskLevel RiskLevel = KineticChainRiskLevel.Low,
     double CumulativeForefootCorrectionMm = 0.0,
     double CumulativeRearfootCorrectionMm = 0.0,
-    IReadOnlyList<string>? WearInSchedule = null
+    IReadOnlyList<string>? WearInSchedule = null,
+    IReadOnlyList<ClinicalAlertItem>? DynamicAlerts = null,
+    double KineticRiskScore = 0.0,
+    OrthoClinic.Core.Domain.Protocols.ComprehensivePodiatricProtocol? AdaptiveProtocol = null,
+    OrthoClinic.Core.Domain.Protocols.ProtocolApprovalRecord? Approval = null
 );
 
 /// <summary>

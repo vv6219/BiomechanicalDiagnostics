@@ -3,7 +3,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:drawables="clr-namespace:OrthoClinic.UI.Drawables"
              xmlns:vm="clr-namespace:OrthoClinic.UI.ViewModels"
+             xmlns:domain="clr-namespace:OrthoClinic.Core.Domain;assembly=OrthoClinic.Core"
              xmlns:converters="clr-namespace:OrthoClinic.UI.Converters"
+             xmlns:views="clr-namespace:OrthoClinic.UI.Views"
              x:Class="OrthoClinic.UI.Views.HorizontalAssessmentView"
              x:DataType="vm:HorizontalTestsViewModel"
              BackgroundColor="#0F172A"
@@ -12,13 +14,28 @@
     <ContentPage.Resources>
         <ResourceDictionary>
             <converters:NotNullConverter x:Key="NotNullConverter" />
+            <converters:NotNullOrEmptyConverter x:Key="NotNullOrEmptyConverter" />
+            <converters:AnatomicalSegmentToNameConverter x:Key="AnatomicalSegmentToNameConverter" />
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <converters:EnumEqualsConverter x:Key="EnumEqualsConverter" />
             <converters:EnumToColorConverter x:Key="EnumToColorConverter" />
+            <converters:AlertSeverityToColorConverter x:Key="AlertSeverityToColorConverter" />
+            <converters:AlertSeverityToBackgroundConverter x:Key="AlertSeverityToBackgroundConverter" />
+            <converters:AlertSeverityToBadgeConverter x:Key="AlertSeverityToBadgeConverter" />
+            <converters:KrsToColorConverter x:Key="KrsToColorConverter" />
+            <converters:KrsToBadgeConverter x:Key="KrsToBadgeConverter" />
+            <converters:HexColorToColorConverter x:Key="HexColorToColorConverter" />
+            <converters:DurometerToBadgeConverter x:Key="DurometerToBadgeConverter" />
+            <converters:QuadrantToBadgeConverter x:Key="QuadrantToBadgeConverter" />
+            <converters:ClinicalProfileToColorConverter x:Key="ProfileColorConverter" />
+            <converters:ClinicalProfileToBadgeConverter x:Key="ProfileBadgeConverter" />
+            <converters:ApprovalStatusToColorConverter x:Key="ApprovalColorConverter" />
+            <converters:ApprovalStatusToBadgeConverter x:Key="ApprovalBadgeConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <ScrollView>
+    <Grid>
+        <ScrollView Grid.Row="0">
         <VerticalStackLayout Padding="16" Spacing="18">
 
             <!-- ЗАГОЛОВОК КЛИНИЧЕСКОЙ СТАНЦИИ -->
@@ -35,6 +52,22 @@
                     <Grid Grid.Row="1" Grid.ColumnSpan="2" ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,6,0,0">
                         <Entry Placeholder="ID Пациента" Text="{Binding PatientId}" TextColor="White" PlaceholderColor="#64748B" FontSize="12" BackgroundColor="#0F172A" HeightRequest="38" />
                         <Entry Grid.Column="1" Placeholder="ФИО Пациента" Text="{Binding PatientFullName}" TextColor="White" PlaceholderColor="#64748B" FontSize="12" BackgroundColor="#0F172A" HeightRequest="38" />
+                    </Grid>
+
+                    <!-- Биометрические параметры пациента для адаптивного протокола -->
+                    <Grid Grid.Row="2" Grid.ColumnSpan="2" ColumnDefinitions="*,*,*" ColumnSpacing="8" Margin="0,6,0,0">
+                        <VerticalStackLayout Grid.Column="0">
+                            <Label Text="Возраст (лет)" TextColor="#94A3B8" FontSize="10"/>
+                            <Entry Text="{Binding PatientAge}" Keyboard="Numeric" TextColor="White" BackgroundColor="#0F172A" HeightRequest="36" FontSize="12"/>
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Вес (кг)" TextColor="#94A3B8" FontSize="10"/>
+                            <Entry Text="{Binding PatientWeightKg}" Keyboard="Numeric" TextColor="White" BackgroundColor="#0F172A" HeightRequest="36" FontSize="12"/>
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="2">
+                            <Label Text="Индекс BMI" TextColor="#94A3B8" FontSize="10"/>
+                            <Entry Text="{Binding PatientBmi}" Keyboard="Numeric" TextColor="White" BackgroundColor="#0F172A" HeightRequest="36" FontSize="12"/>
+                        </VerticalStackLayout>
                     </Grid>
                 </Grid>
             </Border>
@@ -148,6 +181,16 @@
                         <Switch Grid.Column="1" IsToggled="{Binding FallsOutwardTest5}" OnColor="#0284C7" ThumbColor="#38BDF8"/>
                     </Grid>
 
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Неврома Мортона / Синдром тарзального канала / Нейропатия" TextColor="White" FontSize="12" VerticalOptions="Center"/>
+                        <Switch Grid.Column="1" IsToggled="{Binding HasMortonOrNeuropathy}" OnColor="#10B981" ThumbColor="#34D399"/>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Узкая модельная обувь (Low-Volume / без запаса объема)" TextColor="White" FontSize="12" VerticalOptions="Center"/>
+                        <Switch Grid.Column="1" IsToggled="{Binding IsNarrowFootwear}" OnColor="#A855F7" ThumbColor="#C084FC"/>
+                    </Grid>
+
                     <Label Text="Уровень метаболической и спортивной активности:" TextColor="#94A3B8" FontSize="11" Margin="0,4,0,0"/>
                     <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="6">
                         <Button Grid.Column="0" Text="Малоакт." Command="{Binding SetActivityLevelCommand}" CommandParameter="Sedentary" 
@@ -193,57 +236,180 @@
                     <GraphicsView x:Name="PlantarMapGraphicsView" HeightRequest="190"/>
 
                     <!-- СПИСОК ВЫПИСАННЫХ КЛИНЬЕВ -->
-                    <Label Text="Назначенные элементы:" TextColor="#E2E8F0" FontSize="12" FontAttributes="Bold"/>
+                    <Label Text="Назначенные элементы и технологическая спецификация:" TextColor="#E2E8F0" FontSize="13" FontAttributes="Bold"/>
                     <CollectionView ItemsSource="{Binding EvaluationResult.Prescriptions}">
                         <CollectionView.ItemTemplate>
-                            <DataTemplate>
-                                <Border BackgroundColor="#0F172A" Margin="0,4" Padding="12" StrokeShape="RoundRectangle 8" Stroke="#334155">
-                                    <Grid ColumnDefinitions="*,Auto">
-                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
-                                            <Label Text="{Binding Placement}" TextColor="White" FontAttributes="Bold" FontSize="13"/>
-                                            <Label Text="{Binding BiomechanicalReason}" TextColor="#94A3B8" FontSize="11"/>
-                                            <Label Text="{Binding ControlTestMandate, StringFormat='Контроль: {0}'}" TextColor="#38BDF8" FontSize="10"/>
-                                            <Label Text="{Binding RecommendedDurometer, StringFormat='Материал: {0}'}" TextColor="#A78BFA" FontSize="10"/>
-                                        </VerticalStackLayout>
-                                        <Label Grid.Column="1" Text="{Binding EffectiveThicknessMm, StringFormat='{0:F1} мм'}" TextColor="#10B981" FontAttributes="Bold" FontSize="15" VerticalOptions="Center"/>
-                                    </Grid>
+                            <DataTemplate x:DataType="domain:WedgeItemPrescription">
+                                <Border BackgroundColor="#0F172A" 
+                                        Margin="0,5" 
+                                        Padding="14" 
+                                        StrokeShape="RoundRectangle 12" 
+                                        Stroke="{Binding MapColorHex, Converter={StaticResource HexColorToColorConverter}}" 
+                                        StrokeThickness="1.5">
+                                    <VerticalStackLayout Spacing="8">
+                                        <!-- Верхняя строка: Название и толщина -->
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                                <Label Text="{Binding TitleRu}" TextColor="White" FontAttributes="Bold" FontSize="13"/>
+                                                <Label Text="{Binding AnatomicalZone}" TextColor="#94A3B8" FontSize="10"/>
+                                            </VerticalStackLayout>
+                                            <VerticalStackLayout Grid.Column="1" HorizontalOptions="End" Spacing="0">
+                                                <Label Text="{Binding EffectiveThicknessMm, StringFormat='{0:F1} мм'}" 
+                                                       TextColor="{Binding MapColorHex, Converter={StaticResource HexColorToColorConverter}}" 
+                                                       FontAttributes="Bold" FontSize="18" HorizontalTextAlignment="End"/>
+                                                <Label Text="{Binding NominalThicknessMm, StringFormat='из {0:F1} мм'}" 
+                                                       TextColor="#64748B" FontSize="10" HorizontalTextAlignment="End"/>
+                                            </VerticalStackLayout>
+                                        </Grid>
+
+                                        <!-- Бейдж адаптивного демпфирования при переполнении сегмента -->
+                                        <Border IsVisible="{Binding IsSegmentClamped}" BackgroundColor="#451A03" Stroke="#F59E0B" Padding="8,3" StrokeShape="RoundRectangle 6" HorizontalOptions="Start">
+                                            <Label Text="🛡️ АДАПТИВНО СЖАТО (Лимит сегмента 6.0 мм)" TextColor="#FCD34D" FontSize="9" FontAttributes="Bold"/>
+                                        </Border>
+
+                                        <!-- Биомеханический вектор сил и разгрузки -->
+                                        <Label Text="{Binding ForceVectorRationale}" TextColor="#CBD5E1" FontSize="11" LineBreakMode="WordWrap"/>
+
+                                        <!-- Прозрачная формула адаптивного расчета -->
+                                        <Border BackgroundColor="#1E293B" Padding="8,5" StrokeShape="RoundRectangle 6" Stroke="#334155">
+                                            <Label Text="{Binding AdaptiveFormulaBreakdown, StringFormat='📐 Формула: {0}'}" TextColor="#38BDF8" FontSize="10"/>
+                                        </Border>
+
+                                        <!-- Мета-информация: Квадрант, Материал, Контроль -->
+                                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
+                                            <Border Grid.Column="0" BackgroundColor="#1E293B" Padding="6,3" StrokeShape="RoundRectangle 6">
+                                                <Label Text="{Binding InsoleQuadrant, Converter={StaticResource QuadrantToBadgeConverter}}" TextColor="#94A3B8" FontSize="9" HorizontalTextAlignment="Center"/>
+                                            </Border>
+                                            <Border Grid.Column="1" BackgroundColor="#1E293B" Padding="6,3" StrokeShape="RoundRectangle 6">
+                                                <Label Text="{Binding RecommendedDurometer, Converter={StaticResource DurometerToBadgeConverter}}" TextColor="#A78BFA" FontSize="9" HorizontalTextAlignment="Center"/>
+                                            </Border>
+                                            <Border Grid.Column="2" BackgroundColor="#1E293B" Padding="6,3" StrokeShape="RoundRectangle 6">
+                                                <Label Text="{Binding ControlTestMandate, StringFormat='Контроль: {0}'}" TextColor="#34D399" FontSize="9" HorizontalTextAlignment="Center"/>
+                                            </Border>
+                                        </Grid>
+
+                                        <!-- Регламент монтажа для техника-ортезиста -->
+                                        <Border BackgroundColor="#1E293B" Padding="8,6" StrokeShape="RoundRectangle 6" Stroke="#334155">
+                                            <VerticalStackLayout Spacing="2">
+                                                <Label Text="🔧 Регламент монтажа мастеру:" TextColor="#E2E8F0" FontSize="10" FontAttributes="Bold"/>
+                                                <Label Text="{Binding InstallationProtocol}" TextColor="#94A3B8" FontSize="10" LineBreakMode="WordWrap"/>
+                                            </VerticalStackLayout>
+                                        </Border>
+                                    </VerticalStackLayout>
                                 </Border>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                     </CollectionView>
 
-                    <!-- КЛИНИЧЕСКИЕ ПРЕДУПРЕЖДЕНИЯ -->
-                    <VerticalStackLayout Spacing="6" Margin="0,6,0,0">
-                        <Label Text="Клинические алерты и противопоказания:" TextColor="#FCA5A5" FontSize="12" FontAttributes="Bold"/>
-                        <CollectionView ItemsSource="{Binding EvaluationResult.ClinicalAlerts}">
+                    <!-- ИНДЕКС КИНЕМАТИЧЕСКОГО РИСКА (KRS) -->
+                    <Border BackgroundColor="#0F172A" Padding="12" StrokeShape="RoundRectangle 10" Stroke="{Binding EvaluationResult.KineticRiskScore, Converter={StaticResource KrsToColorConverter}}">
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" RowSpacing="6">
+                            <VerticalStackLayout Grid.Column="0">
+                                <Label Text="ИНДЕКС КИНЕМАТИЧЕСКОГО РИСКА (KRS)" TextColor="#94A3B8" FontSize="10" FontAttributes="Bold"/>
+                                <Label Text="{Binding EvaluationResult.KineticRiskScore, Converter={StaticResource KrsToBadgeConverter}}" 
+                                       TextColor="{Binding EvaluationResult.KineticRiskScore, Converter={StaticResource KrsToColorConverter}}" 
+                                       FontSize="12" FontAttributes="Bold"/>
+                            </VerticalStackLayout>
+                            <Label Grid.Column="1" Text="{Binding EvaluationResult.KineticRiskScore, StringFormat='{0:F0}%'}" 
+                                   TextColor="{Binding EvaluationResult.KineticRiskScore, Converter={StaticResource KrsToColorConverter}}" 
+                                   FontSize="22" FontAttributes="Bold" VerticalOptions="Center"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- ДИНАМИЧЕСКИЕ КЛИНИЧЕСКИЕ АЛЕРТЫ И ПРОТИВОПОКАЗАНИЯ (НЕ ОТОБРАЖАТЬ ПУСТЫЕ КАРТОЧКИ) -->
+                    <VerticalStackLayout Spacing="8" Margin="0,6,0,0" IsVisible="{Binding EvaluationResult.DynamicAlerts.Count, Converter={StaticResource NotNullOrEmptyConverter}}">
+                        <Label Text="Клинические алерты и противопоказания:" TextColor="#FCA5A5" FontSize="13" FontAttributes="Bold"/>
+                        <CollectionView ItemsSource="{Binding EvaluationResult.DynamicAlerts}">
                             <CollectionView.ItemTemplate>
-                                <DataTemplate>
-                                    <Label Text="{Binding StringFormat='• {0}'}" TextColor="#F87171" FontSize="11"/>
+                                <DataTemplate x:DataType="domain:ClinicalAlertItem">
+                                    <Border BackgroundColor="{Binding Severity, Converter={StaticResource AlertSeverityToBackgroundConverter}}" 
+                                            Stroke="{Binding Severity, Converter={StaticResource AlertSeverityToColorConverter}}" 
+                                            StrokeThickness="1.5"
+                                            Padding="12" 
+                                            Margin="0,4" 
+                                            StrokeShape="RoundRectangle 10"
+                                            IsVisible="{Binding Title, Converter={StaticResource NotNullOrEmptyConverter}}">
+                                        <VerticalStackLayout Spacing="6">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <Label Text="{Binding Severity, Converter={StaticResource AlertSeverityToBadgeConverter}}" 
+                                                       TextColor="{Binding Severity, Converter={StaticResource AlertSeverityToColorConverter}}" 
+                                                       FontSize="11" FontAttributes="Bold"/>
+                                                <Border Grid.Column="1" BackgroundColor="#0F172A" Padding="6,2" StrokeShape="RoundRectangle 6">
+                                                    <Label Text="{Binding AffectedSegment, Converter={StaticResource AnatomicalSegmentToNameConverter}}" TextColor="#94A3B8" FontSize="9"/>
+                                                </Border>
+                                            </Grid>
+
+                                            <Label Text="{Binding Title}" TextColor="White" FontSize="12" FontAttributes="Bold"
+                                                   IsVisible="{Binding Title, Converter={StaticResource NotNullOrEmptyConverter}}"/>
+
+                                            <Label Text="{Binding BiomechanicalRationale}" TextColor="#CBD5E1" FontSize="11" LineBreakMode="WordWrap"
+                                                   IsVisible="{Binding BiomechanicalRationale, Converter={StaticResource NotNullOrEmptyConverter}}"/>
+
+                                            <!-- Адаптивный протокол подиатра показывается ТОЛЬКО если есть текст (не показывать пустые карточки/блоки!) -->
+                                            <Border BackgroundColor="#0F172A" Padding="10" StrokeShape="RoundRectangle 8" Stroke="#38BDF8" StrokeThickness="1" Margin="0,4,0,0"
+                                                    IsVisible="{Binding AdaptiveActionPlan, Converter={StaticResource NotNullOrEmptyConverter}}">
+                                                <VerticalStackLayout Spacing="4">
+                                                    <HorizontalStackLayout Spacing="6">
+                                                        <Label Text="📋" FontSize="11" VerticalOptions="Center"/>
+                                                        <Label Text="Адаптивный протокол подиатра:" TextColor="#38BDF8" FontSize="11" FontAttributes="Bold" VerticalOptions="Center"/>
+                                                    </HorizontalStackLayout>
+                                                    <Label Text="{Binding AdaptiveActionPlan}" TextColor="#E2E8F0" FontSize="11" LineBreakMode="WordWrap"/>
+                                                </VerticalStackLayout>
+                                            </Border>
+                                        </VerticalStackLayout>
+                                    </Border>
                                 </DataTemplate>
                             </CollectionView.ItemTemplate>
                         </CollectionView>
                     </VerticalStackLayout>
 
-                    <!-- ИНДИВИДУАЛЬНЫЙ ГРАФИК НОШЕНИЯ -->
-                    <VerticalStackLayout Spacing="4" Margin="0,6,0,0">
+                    <!-- ИНДИВИДУАЛЬНЫЙ ГРАФИК НОШЕНИЯ (НЕ ОТОБРАЖАТЬ ПУСТЫЕ СТРОКИ) -->
+                    <VerticalStackLayout Spacing="4" Margin="0,6,0,0"
+                                         IsVisible="{Binding EvaluationResult.WearInSchedule.Count, Converter={StaticResource NotNullOrEmptyConverter}}">
                         <Label Text="Протокол адаптации и реабилитации:" TextColor="#93C5FD" FontSize="12" FontAttributes="Bold"/>
                         <CollectionView ItemsSource="{Binding EvaluationResult.WearInSchedule}">
                             <CollectionView.ItemTemplate>
-                                <DataTemplate>
-                                    <Label Text="{Binding StringFormat='✓ {0}'}" TextColor="#CBD5E1" FontSize="11"/>
+                                <DataTemplate x:DataType="x:String">
+                                    <HorizontalStackLayout Spacing="6" Margin="0,2"
+                                                           IsVisible="{Binding ., Converter={StaticResource NotNullOrEmptyConverter}}">
+                                        <Label Text="✓" TextColor="#38BDF8" FontSize="11" FontAttributes="Bold" VerticalOptions="Start"/>
+                                        <Label Text="{Binding .}" TextColor="#CBD5E1" FontSize="11" LineBreakMode="WordWrap"/>
+                                    </HorizontalStackLayout>
                                 </DataTemplate>
                             </CollectionView.ItemTemplate>
                         </CollectionView>
                     </VerticalStackLayout>
+
+                    <!-- ПОДРОБНЫЙ АДАПТИВНЫЙ ПОДИАТРИЧЕСКИЙ ПРОТОКОЛ FORMTHOTICS -->
+                    <views:AdaptiveProtocolView BindingContext="{Binding}" Margin="0,8,0,0"/>
+
+                    <!-- КНОПКИ ПРОСМОТРА И ЭКСПОРТА ПРОТОКОЛА В PDF -->
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8" Margin="0,8,0,0">
+                        <Button Grid.Column="0"
+                                Text="📄 Просмотр протокола (A4)" 
+                                Command="{Binding ShowPrintProtocolCommand}"
+                                BackgroundColor="#0284C7" TextColor="White" FontAttributes="Bold" HeightRequest="44" CornerRadius="10"/>
+
+                        <Button Grid.Column="1"
+                                Text="💾 Экспорт в PDF (A4)" 
+                                Command="{Binding ExportPdfProtocolCommand}"
+                                BackgroundColor="#059669" TextColor="White" FontAttributes="Bold" HeightRequest="44" CornerRadius="10"/>
+                    </Grid>
 
                     <!-- КНОПКА АТОМАРНОГО СОХРАНЕНИЯ В ЗАШИФРОВАННУЮ БД -->
                     <Button Text="Сохранить в зашифрованную медицинскую карту" 
                             Command="{Binding SaveExamRecordCommand}"
                             IsEnabled="{Binding IsSaving, Converter={StaticResource InvertedBoolConverter}}"
-                            BackgroundColor="#10B981" TextColor="White" FontAttributes="Bold" HeightRequest="46" CornerRadius="10" Margin="0,8,0,0"/>
+                            BackgroundColor="#10B981" TextColor="White" FontAttributes="Bold" HeightRequest="46" CornerRadius="10" Margin="0,4,0,0"/>
                 </VerticalStackLayout>
             </Border>
 
         </VerticalStackLayout>
     </ScrollView>
+
+    <!-- ОВЕРЛЕЙ: ГОТОВЫЙ К ПЕЧАТИ ПРОТОКОЛ С УТВЕРЖДЕНИЕМ ВРАЧОМ -->
+    <views:PrintableProtocolModalView Grid.Row="0" 
+                                     IsVisible="{Binding IsPrintProtocolVisible}" 
+                                     BindingContext="{Binding}"/>
+</Grid>
 </ContentPage>

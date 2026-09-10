@@ -81,6 +81,7 @@ public enum KineticChainRiskLevel
 {
     Low,
     Moderate,
+    High,
     CriticalTorsionConflict // Торсионный конфликт антеторсии бедра и наружного перекрута голени
 }
 

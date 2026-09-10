@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:converters="clr-namespace:OrthoClinic.UI.Converters"
+             xmlns:proto="clr-namespace:OrthoClinic.Core.Domain.Protocols;assembly=OrthoClinic.Core"
+             xmlns:vm="clr-namespace:OrthoClinic.UI.ViewModels"
+             x:Class="OrthoClinic.UI.Views.AdaptiveProtocolView"
+             x:DataType="vm:HorizontalTestsViewModel"
+             BackgroundColor="#0F172A">
+
+    <ContentView.Resources>
+        <ResourceDictionary>
+            <converters:NotNullConverter x:Key="NotNullConverter" />
+            <converters:NotNullOrEmptyConverter x:Key="NotNullOrEmptyConverter" />
+            <converters:ClinicalProfileToColorConverter x:Key="ProfileColorConverter" />
+            <converters:ClinicalProfileToBadgeConverter x:Key="ProfileBadgeConverter" />
+        </ResourceDictionary>
+    </ContentView.Resources>
+
+    <VerticalStackLayout Spacing="14" Padding="4" IsVisible="{Binding AdaptiveProtocol, Converter={StaticResource NotNullConverter}}">
+
+        <!-- ГЛАВНЫЙ ЗАГОЛОВОК ПРОТОКОЛА -->
+        <Border BackgroundColor="#1E293B" Stroke="#38BDF8" StrokeThickness="1.5" Padding="14" StrokeShape="RoundRectangle 12">
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                <Label Text="🩺" FontSize="26" VerticalOptions="Center"/>
+                <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
+                    <Label Text="АДАПТИВНЫЙ ПРОТОКОЛ ПОДИАТРА" TextColor="#38BDF8" FontSize="14" FontAttributes="Bold"/>
+                    <Label Text="Клинический регламент адаптации, термоформовки Formax (85°C) и компенсаторных клиньев" TextColor="#CBD5E1" FontSize="11"/>
+                </VerticalStackLayout>
+            </Grid>
+        </Border>
+
+        <!-- КАРТОЧКА НАЗНАЧЕННОЙ ПЕНЫ И МОДЕЛИ -->
+        <Border BackgroundColor="#1E293B" Padding="14" Stroke="#334155" StrokeShape="RoundRectangle 14">
+            <VerticalStackLayout Spacing="6">
+                <Grid ColumnDefinitions="*,Auto">
+                    <HorizontalStackLayout Spacing="8">
+                        <Label Text="НАЗНАЧЕНИЕ:" TextColor="#94A3B8" FontSize="11" FontAttributes="Bold"/>
+                        <Label Text="{Binding AdaptiveProtocol.ClinicalProfile, Converter={StaticResource ProfileBadgeConverter}}" 
+                               TextColor="{Binding AdaptiveProtocol.ClinicalProfile, Converter={StaticResource ProfileColorConverter}}" 
+                               FontSize="11" FontAttributes="Bold"/>
+                    </HorizontalStackLayout>
+                    <Border Grid.Column="1" BackgroundColor="#0F172A" Padding="8,3" StrokeShape="RoundRectangle 8">
+                        <Label Text="{Binding AdaptiveProtocol.InsoleThicknessMm, StringFormat='Толщина: {0:F1} мм'}" 
+                               TextColor="#38BDF8" FontSize="11" FontAttributes="Bold"/>
+                    </Border>
+                </Grid>
+
+                <Label Text="{Binding AdaptiveProtocol.RecommendedModelTitle}" TextColor="White" FontSize="18" FontAttributes="Bold"/>
+                <Label Text="{Binding AdaptiveProtocol.FoamDensityDescription}" TextColor="#CBD5E1" FontSize="12"/>
+                <Label Text="{Binding AdaptiveProtocol.CriticalClinicalAdvice}" TextColor="#FBBF24" FontSize="11" Margin="0,4,0,0"/>
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- ТЕПЛОФИЗИЧЕСКИЙ РЕГЛАМЕНТ 85°C -->
+        <Border BackgroundColor="#1E293B" Padding="12" Stroke="#334155" StrokeShape="RoundRectangle 12">
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Теплофизический регламент термоформовки Formax (85°C):" TextColor="#38BDF8" FontSize="12" FontAttributes="Bold"/>
+                <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto">
+                    <VerticalStackLayout Grid.Column="0">
+                        <Label Text="Температура" TextColor="#94A3B8" FontSize="10"/>
+                        <Label Text="{Binding AdaptiveProtocol.HeatingTemperatureC, StringFormat='{0:F0}°C'}" TextColor="#EF4444" FontAttributes="Bold" FontSize="16"/>
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="1">
+                        <Label Text="Экспозиция фена" TextColor="#94A3B8" FontSize="10"/>
+                        <Label Text="{Binding AdaptiveProtocol.HeatingSeconds, StringFormat='{0} сек'}" TextColor="#F59E0B" FontAttributes="Bold" FontSize="16"/>
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="2">
+                        <Label Text="Формовка в обуви" TextColor="#94A3B8" FontSize="10"/>
+                        <Label Text="{Binding AdaptiveProtocol.InShoeMoldingSeconds, StringFormat='{0} сек'}" TextColor="#10B981" FontAttributes="Bold" FontSize="16"/>
+                    </VerticalStackLayout>
+                </Grid>
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- БЛОК КАЛИБРОВАННЫХ КЛИНИЧЕСКИХ КЛИНИЕВ -->
+        <Border IsVisible="{Binding AdaptiveProtocol.Wedges.Count, Converter={StaticResource NotNullOrEmptyConverter}}"
+                BackgroundColor="#1E293B" Padding="12" StrokeShape="RoundRectangle 12" Stroke="#334155">
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Калиброванные клинья с защитой от срыва адаптации:" TextColor="#38BDF8" FontAttributes="Bold" FontSize="12"/>
+                <CollectionView ItemsSource="{Binding AdaptiveProtocol.Wedges}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="proto:WedgingPlan">
+                            <Border BackgroundColor="#0F172A" Margin="0,3" Padding="10" StrokeShape="RoundRectangle 8">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                        <Label Text="{Binding AnatomicalZone}" TextColor="White" FontSize="12" FontAttributes="Bold"/>
+                                        <Label Text="{Binding BiomechanicalObjective}" TextColor="#94A3B8" FontSize="10"/>
+                                        <Label Text="{Binding NominalThicknessMm, StringFormat='Номинал: {0:F1} мм'}" TextColor="#64748B" FontSize="10"/>
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" HorizontalOptions="End">
+                                        <Label Text="{Binding CalculatedThicknessMm, StringFormat='{0:F1} мм'}" TextColor="#10B981" FontAttributes="Bold" FontSize="15" HorizontalTextAlignment="End"/>
+                                        <Label Text="эффективная" TextColor="#64748B" FontSize="9" HorizontalTextAlignment="End"/>
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- ТАЙМЛАЙН АДАПТАЦИИ (ДНИ 1-4, 5-14, 15-28) -->
+        <VerticalStackLayout Spacing="6" IsVisible="{Binding AdaptiveProtocol.Timeline.Count, Converter={StaticResource NotNullOrEmptyConverter}}">
+            <Label Text="Этапный протокол адаптации стопы к нагрузке:" TextColor="#38BDF8" FontAttributes="Bold" FontSize="13"/>
+            <CollectionView ItemsSource="{Binding AdaptiveProtocol.Timeline}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="proto:AdaptationStage">
+                        <Border BackgroundColor="#1E293B" Margin="0,4" Padding="12" StrokeShape="RoundRectangle 10" Stroke="#334155">
+                            <VerticalStackLayout Spacing="4">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Label Grid.Column="0" Text="{Binding StageTitle}" TextColor="White" FontAttributes="Bold" FontSize="12"/>
+                                    <Label Grid.Column="1" Text="{Binding DailyWearHours}" TextColor="#10B981" FontAttributes="Bold" FontSize="11"/>
+                                </Grid>
+                                <Label Text="{Binding KinematicMode, StringFormat='Режим: {0}'}" TextColor="#94A3B8" FontSize="11"/>
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+
+        <!-- БЛОК КОРРЕКТОРОВ И ПЕЛОТОВ -->
+        <Border IsVisible="{Binding AdaptiveProtocol.MetatarsalPad, Converter={StaticResource NotNullConverter}}" 
+                BackgroundColor="#1E293B" Padding="12" StrokeShape="RoundRectangle 10" Stroke="#334155">
+            <VerticalStackLayout Spacing="4">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Grid.Column="0" Text="Метатарзальный пелот (Капля декомпрессии):" TextColor="#38BDF8" FontAttributes="Bold" FontSize="12"/>
+                    <Border Grid.Column="1" BackgroundColor="#0F172A" Padding="8,2" StrokeShape="RoundRectangle 6">
+                        <Label Text="{Binding AdaptiveProtocol.MetatarsalPad.PadSize, StringFormat='Размер: {0}'}" TextColor="#10B981" FontAttributes="Bold" FontSize="11"/>
+                    </Border>
+                </Grid>
+                <Label Text="{Binding AdaptiveProtocol.MetatarsalPad.PlacementZone}" TextColor="#E2E8F0" FontSize="11"/>
+                <Label Text="{Binding AdaptiveProtocol.MetatarsalPad.DecompressionTarget}" TextColor="#94A3B8" FontSize="10"/>
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- КОНТРОЛЬНЫЙ ОСМОТР -->
+        <Border BackgroundColor="#0F172A" Stroke="#38BDF8" Padding="12" StrokeShape="RoundRectangle 10">
+            <Grid ColumnDefinitions="*,Auto">
+                <VerticalStackLayout Grid.Column="0">
+                    <Label Text="Контрольный осмотр и термокоррекция:" TextColor="White" FontAttributes="Bold" FontSize="12"/>
+                    <Label Text="Оценка зон износа пены Formax, доустановка клиньев" TextColor="#94A3B8" FontSize="10"/>
+                </VerticalStackLayout>
+                <Label Grid.Column="1" Text="{Binding AdaptiveProtocol.NextFollowUpDay, StringFormat='Через {0} дн.'}" 
+                       TextColor="#38BDF8" FontAttributes="Bold" FontSize="13" VerticalOptions="Center"/>
+            </Grid>
+        </Border>
+
+    </VerticalStackLayout>
+</ContentView>

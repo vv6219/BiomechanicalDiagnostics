@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:converters="clr-namespace:OrthoClinic.UI.Converters"
+             xmlns:domain="clr-namespace:OrthoClinic.Core.Domain;assembly=OrthoClinic.Core"
+             xmlns:proto="clr-namespace:OrthoClinic.Core.Domain.Protocols;assembly=OrthoClinic.Core"
+             xmlns:vm="clr-namespace:OrthoClinic.UI.ViewModels"
+             x:Class="OrthoClinic.UI.Views.PrintableProtocolModalView"
+             x:DataType="vm:HorizontalTestsViewModel"
+             BackgroundColor="#CC0F172A">
+
+    <ContentView.Resources>
+        <ResourceDictionary>
+            <converters:NotNullConverter x:Key="NotNullConverter" />
+            <converters:NotNullOrEmptyConverter x:Key="NotNullOrEmptyConverter" />
+            <converters:ClinicalProfileToColorConverter x:Key="ProfileColorConverter" />
+            <converters:ClinicalProfileToBadgeConverter x:Key="ProfileBadgeConverter" />
+            <converters:ApprovalStatusToColorConverter x:Key="ApprovalColorConverter" />
+            <converters:ApprovalStatusToBadgeConverter x:Key="ApprovalBadgeConverter" />
+        </ResourceDictionary>
+    </ContentView.Resources>
+
+    <!-- МОДАЛЬНОЕ ОКНО ПЕЧАТНОГО БЛАНКА A4 -->
+    <Grid Padding="20">
+        <Border BackgroundColor="#FFFFFF" 
+                Stroke="#CBD5E1" 
+                StrokeThickness="2"
+                StrokeShape="RoundRectangle 12"
+                MaximumWidthRequest="850"
+                HorizontalOptions="Center"
+                VerticalOptions="Center">
+            <Border.Shadow>
+                <Shadow Brush="#000000" Offset="0,10" Radius="25" Opacity="0.5" />
+            </Border.Shadow>
+
+            <Grid RowDefinitions="Auto,*,Auto">
+
+                <!-- ПАНЕЛЬ УПРАВЛЕНИЯ ПЕЧАТЬЮ (ВЕРХНЯЯ ШАПКА) -->
+                <Border Grid.Row="0" BackgroundColor="#0F172A" Padding="14,10">
+                    <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                        <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                            <Label Text="📄 ГОТОВЫЙ К ПЕЧАТИ МЕДИЦИНСКИЙ ПРОТОКОЛ" TextColor="#38BDF8" FontAttributes="Bold" FontSize="13" VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+
+                        <Button Grid.Column="1" 
+                                Text="💾 Экспорт в PDF" 
+                                Command="{Binding ExportPdfProtocolCommand}"
+                                BackgroundColor="#059669" TextColor="White" FontAttributes="Bold" HeightRequest="36" CornerRadius="6" Margin="0,0,10,0" Padding="14,0"/>
+
+                        <Button Grid.Column="2" 
+                                Text="🖨 Печать" 
+                                Command="{Binding PrintProtocolCommand}"
+                                BackgroundColor="#0284C7" TextColor="White" FontAttributes="Bold" HeightRequest="36" CornerRadius="6" Margin="0,0,10,0" Padding="14,0"/>
+
+                        <Button Grid.Column="3" 
+                                Text="✕ Закрыть" 
+                                Command="{Binding ClosePrintProtocolCommand}"
+                                BackgroundColor="#334155" TextColor="#F8FAFC" HeightRequest="36" CornerRadius="6" Padding="14,0"/>
+                    </Grid>
+                </Border>
+
+                <!-- ОСНОВНОЙ ПЕЧАТНЫЙ ДОКУМЕНТ (A4 PRINT FORM) -->
+                <ScrollView Grid.Row="1" HeightRequest="580">
+                    <VerticalStackLayout Spacing="12" Padding="24" BackgroundColor="#FFFFFF">
+
+                        <!-- ШАПКА ДОКУМЕНТА -->
+                        <Grid ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                <Label Text="МЕДИЦИНСКИЙ ЦЕНТР ОРТОПЕДИИ И ПОДИАТРИИ" TextColor="#0F172A" FontSize="11" FontAttributes="Bold"/>
+                                <Label Text="ПРОТОКОЛ БИОМЕХАНИЧЕСКОГО МОДЕЛИРОВАНИЯ И АДАПТАЦИИ СТОПЫ" TextColor="#0369A1" FontSize="15" FontAttributes="Bold"/>
+                                <Label Text="Комплексная система динамического ортезирования Formthotics™ Medical" TextColor="#64748B" FontSize="10"/>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" HorizontalOptions="End" Spacing="2">
+                                <Label Text="{Binding EvaluationTimestamp, StringFormat='Дата: {0:dd.MM.yyyy HH:mm}'}" TextColor="#475569" FontSize="10"/>
+                                <Label Text="{Binding PatientId, StringFormat='ID: {0}'}" TextColor="#0F172A" FontSize="11" FontAttributes="Bold" HorizontalTextAlignment="End"/>
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <BoxView HeightRequest="1.5" Color="#0369A1"/>
+
+                        <!-- БЛОК 1: ДАННЫЕ ПАЦИЕНТА -->
+                        <Border BackgroundColor="#F8FAFC" Stroke="#E2E8F0" StrokeThickness="1" Padding="10" StrokeShape="RoundRectangle 6">
+                            <Grid ColumnDefinitions="2*,*,*,*" RowDefinitions="Auto,Auto" RowSpacing="6">
+                                <VerticalStackLayout Grid.Row="0" Grid.Column="0">
+                                    <Label Text="ФИО Пациента:" TextColor="#64748B" FontSize="10"/>
+                                    <Label Text="{Binding PatientFullName}" TextColor="#0F172A" FontSize="12" FontAttributes="Bold"/>
+                                </VerticalStackLayout>
+
+                                <VerticalStackLayout Grid.Row="0" Grid.Column="1">
+                                    <Label Text="Возраст:" TextColor="#64748B" FontSize="10"/>
+                                    <Label Text="{Binding PatientAge, StringFormat='{0} лет'}" TextColor="#0F172A" FontSize="12" FontAttributes="Bold"/>
+                                </VerticalStackLayout>
+
+                                <VerticalStackLayout Grid.Row="0" Grid.Column="2">
+                                    <Label Text="Масса тела:" TextColor="#64748B" FontSize="10"/>
+                                    <Label Text="{Binding PatientWeightKg, StringFormat='{0:F1} кг'}" TextColor="#0F172A" FontSize="12" FontAttributes="Bold"/>
+                                </VerticalStackLayout>
+
+                                <VerticalStackLayout Grid.Row="0" Grid.Column="3">
+                                    <Label Text="Индекс массы (BMI):" TextColor="#64748B" FontSize="10"/>
+                                    <Label Text="{Binding PatientBmi, StringFormat='{0:F1}'}" TextColor="#0F172A" FontSize="12" FontAttributes="Bold"/>
+                                </VerticalStackLayout>
+
+                                <VerticalStackLayout Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
+                                    <Label Text="Двигательная активность:" TextColor="#64748B" FontSize="10"/>
+                                    <Label Text="{Binding ActivityTier}" TextColor="#0369A1" FontSize="12" FontAttributes="Bold"/>
+                                </VerticalStackLayout>
+
+                                <VerticalStackLayout Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2">
+                                    <Label Text="Особые маркеры анамнеза:" TextColor="#64748B" FontSize="10"/>
+                                    <Label Text="{Binding ClinicalHistorySummary}" TextColor="#0F172A" FontSize="11"/>
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+
+                        <!-- БЛОК 2: РЕЗУЛЬТАТЫ ГОРИЗОНТАЛЬНОГО ТЕСТИРОВАНИЯ -->
+                        <Border BackgroundColor="#F8FAFC" Stroke="#E2E8F0" StrokeThickness="1" Padding="10" StrokeShape="RoundRectangle 6">
+                            <VerticalStackLayout Spacing="6">
+                                <Label Text="БИОМЕХАНИЧЕСКИЙ СТАТУС НА КУШЕТКЕ:" TextColor="#0369A1" FontSize="11" FontAttributes="Bold"/>
+                                <Grid ColumnDefinitions="*,*,*,*" RowSpacing="4">
+                                    <VerticalStackLayout Grid.Column="0">
+                                        <Label Text="Разница ног (ΔL):" TextColor="#64748B" FontSize="10"/>
+                                        <Label Text="{Binding CurrentDelta, StringFormat='{0:F1} мм'}" TextColor="#0F172A" FontSize="12" FontAttributes="Bold"/>
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="1">
+                                        <Label Text="Тип асимметрии:" TextColor="#64748B" FontSize="10"/>
+                                        <Label Text="{Binding DiscrepancyNature}" TextColor="#0F172A" FontSize="11"/>
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="2">
+                                        <Label Text="Ротация бедра / Барьер:" TextColor="#64748B" FontSize="10"/>
+                                        <Label Text="{Binding Barrier}" TextColor="#0F172A" FontSize="11"/>
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="3">
+                                        <Label Text="Торсия голени:" TextColor="#64748B" FontSize="10"/>
+                                        <Label Text="{Binding TibialState}" TextColor="#0F172A" FontSize="11"/>
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <!-- БЛОК 3: НАЗНАЧЕННАЯ МОДЕЛЬ И ТЕПЛОФИЗИЧЕСКИЙ РАСЧЕТ -->
+                        <Border BackgroundColor="#EFF6FF" Stroke="#BFDBFE" StrokeThickness="1" Padding="12" StrokeShape="RoundRectangle 6">
+                            <VerticalStackLayout Spacing="8">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <VerticalStackLayout Grid.Column="0">
+                                        <Label Text="НАЗНАЧЕННАЯ ОРТОПЕДИЧЕСКАЯ БАЗА:" TextColor="#1E40AF" FontSize="10" FontAttributes="Bold"/>
+                                        <Label Text="{Binding AdaptiveProtocol.RecommendedModelTitle}" TextColor="#0F172A" FontSize="16" FontAttributes="Bold"/>
+                                        <Label Text="{Binding AdaptiveProtocol.FoamDensityDescription}" TextColor="#334155" FontSize="11"/>
+                                    </VerticalStackLayout>
+                                    <Border Grid.Column="1" BackgroundColor="#DBEAFE" Padding="10,4" StrokeShape="RoundRectangle 6" VerticalOptions="Center">
+                                        <Label Text="{Binding AdaptiveProtocol.ClinicalProfile, Converter={StaticResource ProfileBadgeConverter}}" 
+                                               TextColor="#1E40AF" FontSize="10" FontAttributes="Bold"/>
+                                    </Border>
+                                </Grid>
+
+                                <BoxView HeightRequest="1" Color="#BFDBFE"/>
+
+                                <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto">
+                                    <VerticalStackLayout Grid.Column="0">
+                                        <Label Text="Толщина заготовки:" TextColor="#64748B" FontSize="10"/>
+                                        <Label Text="{Binding AdaptiveProtocol.InsoleThicknessMm, StringFormat='h = {0:F1} мм'}" TextColor="#0F172A" FontSize="13" FontAttributes="Bold"/>
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="1">
+                                        <Label Text="Нагрев феном (85°C):" TextColor="#64748B" FontSize="10"/>
+                                        <Label Text="{Binding AdaptiveProtocol.HeatingSeconds, StringFormat='t_heat = {0} сек'}" TextColor="#B45309" FontSize="13" FontAttributes="Bold"/>
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="2">
+                                        <Label Text="Формовка в обуви:" TextColor="#64748B" FontSize="10"/>
+                                        <Label Text="{Binding AdaptiveProtocol.InShoeMoldingSeconds, StringFormat='t_cool = {0} сек'}" TextColor="#047857" FontSize="13" FontAttributes="Bold"/>
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <!-- БЛОК 4: ДЕТАЛИЗИРОВАННАЯ ТАБЛИЦА РАСЧЕТА КЛИНИЧЕСКИХ КЛИНИЕВ -->
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="СПЕЦИФИКАЦИЯ КОМПЕНСАТОРНЫХ ЭЛЕМЕНТОВ (КЛИНИЧЕСКАЯ КАЛИБРОВКА):" TextColor="#0369A1" FontSize="11" FontAttributes="Bold"/>
+                            
+                            <!-- Заголовок таблицы -->
+                            <Grid ColumnDefinitions="2*,*,*,*,3*" BackgroundColor="#E2E8F0" Padding="8,5">
+                                <Label Grid.Column="0" Text="Анатомическая зона" TextColor="#334155" FontSize="10" FontAttributes="Bold"/>
+                                <Label Grid.Column="1" Text="Тип клина" TextColor="#334155" FontSize="10" FontAttributes="Bold"/>
+                                <Label Grid.Column="2" Text="T_nom" TextColor="#334155" FontSize="10" FontAttributes="Bold" HorizontalTextAlignment="Center"/>
+                                <Label Grid.Column="3" Text="T_eff (ИТОГ)" TextColor="#0369A1" FontSize="10" FontAttributes="Bold" HorizontalTextAlignment="Center"/>
+                                <Label Grid.Column="4" Text="Биомеханическая цель" TextColor="#334155" FontSize="10" FontAttributes="Bold"/>
+                            </Grid>
+
+                            <CollectionView ItemsSource="{Binding AdaptiveProtocol.Wedges}">
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate x:DataType="proto:WedgingPlan">
+                                        <Border BackgroundColor="#FFFFFF" Stroke="#E2E8F0" StrokeThickness="0.5" Padding="8,6">
+                                            <Grid ColumnDefinitions="2*,*,*,*,3*">
+                                                <Label Grid.Column="0" Text="{Binding AnatomicalZone}" TextColor="#0F172A" FontSize="11" FontAttributes="Bold"/>
+                                                <Label Grid.Column="1" Text="{Binding Type}" TextColor="#475569" FontSize="10"/>
+                                                <Label Grid.Column="2" Text="{Binding NominalThicknessMm, StringFormat='{0:F1} мм'}" TextColor="#64748B" FontSize="11" HorizontalTextAlignment="Center"/>
+                                                <Label Grid.Column="3" Text="{Binding CalculatedThicknessMm, StringFormat='{0:F1} мм'}" TextColor="#047857" FontSize="12" FontAttributes="Bold" HorizontalTextAlignment="Center"/>
+                                                <Label Grid.Column="4" Text="{Binding BiomechanicalObjective}" TextColor="#334155" FontSize="10"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                        </VerticalStackLayout>
+
+                        <!-- БЛОК 5: МЕТАТАРЗАЛЬНЫЙ ПЕЛОТ (ЕСЛИ НАЗНАЧЕН) -->
+                        <Border IsVisible="{Binding AdaptiveProtocol.MetatarsalPad, Converter={StaticResource NotNullConverter}}"
+                                BackgroundColor="#F8FAFC" Stroke="#E2E8F0" StrokeThickness="1" Padding="10" StrokeShape="RoundRectangle 6">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <Label Grid.Column="0" Text="Метатарзальный пелот (Капля): " TextColor="#0369A1" FontSize="11" FontAttributes="Bold"/>
+                                <Label Grid.Column="1" Text="{Binding AdaptiveProtocol.MetatarsalPad.PlacementZone}" TextColor="#334155" FontSize="10"/>
+                                <Border Grid.Column="2" BackgroundColor="#E0F2FE" Padding="8,2" StrokeShape="RoundRectangle 4">
+                                    <Label Text="{Binding AdaptiveProtocol.MetatarsalPad.PadSize, StringFormat='Размер: {0}'}" TextColor="#0369A1" FontSize="11" FontAttributes="Bold"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <!-- БЛОК: КЛИНИЧЕСКИЕ АЛЕРТЫ И РЕГЛАМЕНТЫ АДАПТАЦИИ ПОДИАТРА (ТОЛЬКО НЕПУСТЫЕ КАРТОЧКИ) -->
+                        <VerticalStackLayout Spacing="6" IsVisible="{Binding EvaluationResult.DynamicAlerts.Count, Converter={StaticResource NotNullConverter}}">
+                            <Label Text="КЛИНИЧЕСКИЕ АЛЕРТЫ И РЕГЛАМЕНТЫ АДАПТАЦИИ ПОДИАТРА:" TextColor="#DC2626" FontSize="11" FontAttributes="Bold"/>
+                            <CollectionView ItemsSource="{Binding EvaluationResult.DynamicAlerts}">
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate x:DataType="domain:ClinicalAlertItem">
+                                        <!-- Отображаем только непустые карточки с валидным заголовком -->
+                                        <Border IsVisible="{Binding Title, Converter={StaticResource NotNullOrEmptyConverter}}"
+                                                BackgroundColor="#FEF2F2" Stroke="#FCA5A5" StrokeThickness="1" 
+                                                Margin="0,3" Padding="10" StrokeShape="RoundRectangle 6">
+                                            <VerticalStackLayout Spacing="6">
+                                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                                    <Border BackgroundColor="#DC2626" Padding="6,2" StrokeShape="RoundRectangle 4">
+                                                        <Label Text="{Binding Severity}" TextColor="White" FontSize="9" FontAttributes="Bold"/>
+                                                    </Border>
+                                                    <Label Grid.Column="1" Text="{Binding Title}" TextColor="#0F172A" FontSize="11" FontAttributes="Bold" Margin="8,0,0,0" VerticalOptions="Center"/>
+                                                    <Label Grid.Column="2" Text="{Binding AffectedSegment}" TextColor="#64748B" FontSize="10" VerticalOptions="Center"/>
+                                                </Grid>
+                                                
+                                                <Label Text="{Binding BiomechanicalRationale}" TextColor="#334155" FontSize="10"/>
+
+                                                <!-- Адаптивный план подиатра -->
+                                                <Border IsVisible="{Binding AdaptiveActionPlan, Converter={StaticResource NotNullOrEmptyConverter}}"
+                                                        BackgroundColor="#FFFFFF" Stroke="#E2E8F0" StrokeThickness="1" 
+                                                        Padding="8" StrokeShape="RoundRectangle 4">
+                                                    <VerticalStackLayout Spacing="4">
+                                                        <Label Text="📋 Адаптивный регламент подиатра:" TextColor="#0369A1" FontSize="10" FontAttributes="Bold"/>
+                                                        <Label Text="{Binding AdaptiveActionPlan}" TextColor="#1E293B" FontSize="9.5" LineBreakMode="WordWrap"/>
+                                                    </VerticalStackLayout>
+                                                </Border>
+                                            </VerticalStackLayout>
+                                        </Border>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                        </VerticalStackLayout>
+
+                        <!-- БЛОК 6: ДОРОЖНАЯ КАРТА АДАПТАЦИИ -->
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="ИНДИВИДУАЛЬНЫЙ РЕГЛАМЕНТ АДАПТАЦИИ СТОПЫ (ДНИ 1–28):" TextColor="#0369A1" FontSize="11" FontAttributes="Bold"/>
+                            <CollectionView ItemsSource="{Binding AdaptiveProtocol.Timeline}">
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate x:DataType="proto:AdaptationStage">
+                                        <Border BackgroundColor="#F8FAFC" Stroke="#E2E8F0" StrokeThickness="1" Margin="0,2" Padding="8" StrokeShape="RoundRectangle 6">
+                                            <Grid ColumnDefinitions="1.5*,*,2*">
+                                                <Label Grid.Column="0" Text="{Binding StageTitle}" TextColor="#0F172A" FontSize="11" FontAttributes="Bold"/>
+                                                <Label Grid.Column="1" Text="{Binding DailyWearHours}" TextColor="#047857" FontSize="10" FontAttributes="Bold"/>
+                                                <Label Grid.Column="2" Text="{Binding KinematicMode}" TextColor="#475569" FontSize="10"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                            <Label Text="{Binding AdaptiveProtocol.NextFollowUpDay, StringFormat='📅 Контрольный осмотр и термокоррекция: через {0} дней'}" 
+                                   TextColor="#0369A1" FontSize="11" FontAttributes="Bold" Margin="0,4,0,0"/>
+                        </VerticalStackLayout>
+
+                        <BoxView HeightRequest="1" Color="#CBD5E1"/>
+
+                        <!-- БЛОК 7: УТВЕРЖДЕНИЕ ВРАЧОМ-ПОДИАТРОМ -->
+                        <Border BackgroundColor="#F8FAFC" Stroke="#CBD5E1" StrokeThickness="1.5" Padding="14" StrokeShape="RoundRectangle 8">
+                            <VerticalStackLayout Spacing="10">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                        <Label Text="СОГЛАСОВАНИЕ И УТВЕРЖДЕНИЕ ПРОТОКОЛА:" TextColor="#0F172A" FontSize="12" FontAttributes="Bold"/>
+                                        <Label Text="Экспертное заключение лечащего врача-ортопеда" TextColor="#64748B" FontSize="10"/>
+                                    </VerticalStackLayout>
+
+                                    <Border Grid.Column="1" 
+                                            BackgroundColor="{Binding CurrentApproval.Status, Converter={StaticResource ApprovalColorConverter}}" 
+                                            Padding="10,4" StrokeShape="RoundRectangle 6">
+                                        <Label Text="{Binding CurrentApproval.Status, Converter={StaticResource ApprovalBadgeConverter}}" 
+                                               TextColor="White" FontSize="11" FontAttributes="Bold"/>
+                                    </Border>
+                                </Grid>
+
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="3">
+                                        <Label Text="Лечащий врач-подиатр:" TextColor="#475569" FontSize="10"/>
+                                        <Entry Text="{Binding DoctorFullName}" 
+                                               Placeholder="ФИО Врача..." 
+                                               TextColor="#0F172A" BackgroundColor="#FFFFFF" HeightRequest="36" FontSize="12"/>
+                                    </VerticalStackLayout>
+
+                                    <VerticalStackLayout Grid.Column="1" Spacing="3">
+                                        <Label Text="Клинические примечания к заказу:" TextColor="#475569" FontSize="10"/>
+                                        <Entry Text="{Binding DoctorNotes}" 
+                                               Placeholder="Дополнительные рекомендации..." 
+                                               TextColor="#0F172A" BackgroundColor="#FFFFFF" HeightRequest="36" FontSize="12"/>
+                                    </VerticalStackLayout>
+                                </Grid>
+
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                        <Label Text="{Binding CurrentApproval.ApprovalDigitalFingerprint, StringFormat='Электронный хеш-штамп: {0}'}" 
+                                               TextColor="#94A3B8" FontSize="9"/>
+                                        <Label Text="{Binding CurrentApproval.ApprovedAtUtc, StringFormat='Время фиксации: {0:dd.MM.yyyy HH:mm:ss} UTC'}" 
+                                               TextColor="#94A3B8" FontSize="9"/>
+                                    </VerticalStackLayout>
+
+                                    <Button Grid.Column="1" 
+                                            Text="✓ Утвердить протокол" 
+                                            Command="{Binding ApproveProtocolCommand}"
+                                            BackgroundColor="#059669" TextColor="White" FontAttributes="Bold" HeightRequest="38" CornerRadius="6" Padding="14,0"/>
+                                </Grid>
+                            </VerticalStackLayout>
+                        </Border>
+
+                    </VerticalStackLayout>
+                </ScrollView>
+
+                <!-- НИЖНЯЯ ПАНЕЛЬ СТАТУСА -->
+                <Border Grid.Row="2" BackgroundColor="#F1F5F9" Padding="14,10" Stroke="#CBD5E1">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="{Binding StatusNotification}" TextColor="#334155" FontSize="11" VerticalOptions="Center"/>
+                        <HorizontalStackLayout Grid.Column="1" Spacing="10">
+                            <Button Text="💾 Экспорт в PDF" Command="{Binding ExportPdfProtocolCommand}" BackgroundColor="#059669" TextColor="White" HeightRequest="34" CornerRadius="6" Padding="12,0"/>
+                            <Button Text="Печать бланка" Command="{Binding PrintProtocolCommand}" BackgroundColor="#0284C7" TextColor="White" HeightRequest="34" CornerRadius="6" Padding="12,0"/>
+                            <Button Text="Готово" Command="{Binding ClosePrintProtocolCommand}" BackgroundColor="#64748B" TextColor="White" HeightRequest="34" CornerRadius="6" Padding="12,0"/>
+                        </HorizontalStackLayout>
+                    </Grid>
+                </Border>
+
+            </Grid>
+        </Border>
+    </Grid>
+</ContentView>

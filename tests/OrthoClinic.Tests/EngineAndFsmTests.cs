@@ -261,4 +261,216 @@ public sealed class EngineAndFsmTests
             }
         }
     }
+
+    [Fact]
+    public void Evaluate_FunctionalPelvicDiscrepancy_GeneratesCriticalContraindicationAlert_AndBlocksPrescription()
+    {
+        var input = new HorizontalInputData(
+            LeftMalleolusMm: 6.0,
+            RightMalleolusMm: 0.0,
+            DiscrepancyNature: LegDiscrepancyType.FunctionalPelvic,
+            PiriformisHypertonus: false,
+            IsAntetorsion: false,
+            IsRetrotorsion: false,
+            HipJointBarrier: RotationBarrier.MuscleFunctional,
+            TibialStatus: TibialTorsion.Normal,
+            GlobalFlags: GlobalBiomechanicalFlags.None,
+            Activity: PatientActivityLevel.Moderate
+        );
+
+        var report = _engine.Evaluate(input);
+
+        report.DynamicAlerts.Should().NotBeNull();
+        var alert = report.DynamicAlerts!.FirstOrDefault(a => a.AlertCode == "CONTRAINDICATION_HEEL_LIFT_FUNCTIONAL_PELVIS");
+        alert.Should().NotBeNull();
+        alert!.Severity.Should().Be(AlertSeverity.CriticalContraindication);
+        alert.IsPrescriptionBlocked.Should().BeTrue();
+        alert.AffectedSegment.Should().Be(AnatomicalSegment.Pelvis_Sacrum);
+        report.Prescriptions.Should().NotContain(p => p.Placement == WedgePlacementType.HeelLiftCompensator);
+    }
+
+    [Fact]
+    public void Evaluate_TorsionParadoxConflict_GeneratesKineticConflictAlert_AndHighKrs()
+    {
+        var input = new HorizontalInputData(
+            LeftMalleolusMm: 0.0,
+            RightMalleolusMm: 0.0,
+            DiscrepancyNature: LegDiscrepancyType.Indeterminate,
+            PiriformisHypertonus: false,
+            IsAntetorsion: true,
+            IsRetrotorsion: false,
+            HipJointBarrier: RotationBarrier.BoneAnatomical,
+            TibialStatus: TibialTorsion.OverRotationOutward,
+            GlobalFlags: GlobalBiomechanicalFlags.None,
+            Activity: PatientActivityLevel.Active
+        );
+
+        var report = _engine.Evaluate(input);
+
+        report.IsComplexTorsionConflict.Should().BeTrue();
+        report.KineticRiskScore.Should().BeGreaterThanOrEqualTo(50.0);
+        report.RiskLevel.Should().Be(KineticChainRiskLevel.CriticalTorsionConflict);
+
+        var conflictAlert = report.DynamicAlerts!.FirstOrDefault(a => a.AlertCode == "CONFLICT_TORSIONAL_PARADOX_STANDING_WAVE");
+        conflictAlert.Should().NotBeNull();
+        conflictAlert!.Severity.Should().Be(AlertSeverity.KineticConflict);
+        conflictAlert.AffectedSegment.Should().Be(AnatomicalSegment.Tibia_Knee);
+    }
+
+    [Fact]
+    public void Evaluate_FemoralBonyBarrier_GeneratesWarningThresholdAlert()
+    {
+        var input = new HorizontalInputData(
+            LeftMalleolusMm: 0.0,
+            RightMalleolusMm: 0.0,
+            DiscrepancyNature: LegDiscrepancyType.Indeterminate,
+            PiriformisHypertonus: false,
+            IsAntetorsion: true,
+            IsRetrotorsion: false,
+            HipJointBarrier: RotationBarrier.BoneAnatomical,
+            TibialStatus: TibialTorsion.Normal,
+            GlobalFlags: GlobalBiomechanicalFlags.None,
+            Activity: PatientActivityLevel.Moderate
+        );
+
+        var report = _engine.Evaluate(input);
+
+        var barrierAlert = report.DynamicAlerts!.FirstOrDefault(a => a.AlertCode == "ALERT_FEMORAL_BONY_BARRIER");
+        barrierAlert.Should().NotBeNull();
+        barrierAlert!.Severity.Should().Be(AlertSeverity.WarningThreshold);
+        barrierAlert.AffectedSegment.Should().Be(AnatomicalSegment.Femur_Hip);
+    }
+
+    [Fact]
+    public void Evaluate_DualTarsalInstability_GeneratesTarsalLaxityAlert()
+    {
+        var input = new HorizontalInputData(
+            LeftMalleolusMm: 0.0,
+            RightMalleolusMm: 0.0,
+            DiscrepancyNature: LegDiscrepancyType.Indeterminate,
+            PiriformisHypertonus: false,
+            IsAntetorsion: false,
+            IsRetrotorsion: false,
+            HipJointBarrier: RotationBarrier.MuscleFunctional,
+            TibialStatus: TibialTorsion.Normal,
+            GlobalFlags: GlobalBiomechanicalFlags.FootFallsInwardTest5 | GlobalBiomechanicalFlags.FootFallsOutwardTest5,
+            Activity: PatientActivityLevel.Sedentary
+        );
+
+        var report = _engine.Evaluate(input);
+
+        var dualAlert = report.DynamicAlerts!.FirstOrDefault(a => a.AlertCode == "ALERT_DUAL_TARSAL_INSTABILITY");
+        dualAlert.Should().NotBeNull();
+        dualAlert!.Severity.Should().Be(AlertSeverity.WarningThreshold);
+        dualAlert.AffectedSegment.Should().Be(AnatomicalSegment.Foot_Rearfoot);
+    }
+
+    [Fact]
+    public void Evaluate_CumulativeSegmentThickness_AppliesProportionalClampingTo6Mm()
+    {
+        // Пациент Sedentary (коэффициент 1.0) с сочетанием антеторсии (3 мм) + гипертонуса грушевидной (3 мм) + перекрута голени (3.5 мм)
+        // Сырая сумма переднего отдела = 3.0 + 3.0 + 3.5 = 9.5 мм (> 6.0 мм)
+        var input = new HorizontalInputData(
+            LeftMalleolusMm: 0.0,
+            RightMalleolusMm: 0.0,
+            DiscrepancyNature: LegDiscrepancyType.Indeterminate,
+            PiriformisHypertonus: true,
+            IsAntetorsion: true,
+            IsRetrotorsion: false,
+            HipJointBarrier: RotationBarrier.MuscleFunctional,
+            TibialStatus: TibialTorsion.OverRotationOutward,
+            GlobalFlags: GlobalBiomechanicalFlags.None,
+            Activity: PatientActivityLevel.Sedentary
+        );
+
+        var report = _engine.Evaluate(input);
+
+        report.CumulativeForefootCorrectionMm.Should().BeLessOrEqualTo(HorizontalAssessmentEngine.MaxSafeSegmentCorrectionMm);
+        var overflowAlert = report.DynamicAlerts!.FirstOrDefault(a => a.AlertCode == "LIMIT_CUMULATIVE_SEGMENT_THICKNESS_EXCEEDED");
+        overflowAlert.Should().NotBeNull();
+        overflowAlert!.Severity.Should().Be(AlertSeverity.WarningThreshold);
+    }
+
+    [Fact]
+    public void Evaluate_AdaptiveWearInSchedule_GeneratesHighRiskProtocolForSevereCases()
+    {
+        var conflictInput = new HorizontalInputData(
+            LeftMalleolusMm: 4.0,
+            RightMalleolusMm: 0.0,
+            DiscrepancyNature: LegDiscrepancyType.FunctionalPelvic,
+            PiriformisHypertonus: true,
+            IsAntetorsion: true,
+            IsRetrotorsion: false,
+            HipJointBarrier: RotationBarrier.BoneAnatomical,
+            TibialStatus: TibialTorsion.OverRotationOutward,
+            GlobalFlags: GlobalBiomechanicalFlags.FootFallsInwardTest5,
+            Activity: PatientActivityLevel.Sedentary
+        );
+
+        var report = _engine.Evaluate(conflictInput);
+
+        report.WearInSchedule.Should().NotBeNullOrEmpty();
+        report.WearInSchedule![0].Should().Contain("Фаза 1");
+        report.WearInSchedule.Last().Should().Contain("Контрольный");
+    }
+
+    [Fact]
+    public void Evaluate_PrescriptionEnrichment_PopulatesRussianTitles_Zones_Formulas_AndProtocols()
+    {
+        var input = new HorizontalInputData(
+            LeftMalleolusMm: 4.0,
+            RightMalleolusMm: 0.0,
+            DiscrepancyNature: LegDiscrepancyType.TrueAnatomical,
+            PiriformisHypertonus: true,
+            IsAntetorsion: true,
+            IsRetrotorsion: false,
+            HipJointBarrier: RotationBarrier.MuscleFunctional,
+            TibialStatus: TibialTorsion.OverRotationOutward,
+            GlobalFlags: GlobalBiomechanicalFlags.FootFallsInwardTest5 | GlobalBiomechanicalFlags.FootFallsOutwardTest5,
+            Activity: PatientActivityLevel.Moderate
+        );
+
+        var report = _engine.Evaluate(input);
+
+        report.Prescriptions.Should().NotBeEmpty();
+        foreach (var p in report.Prescriptions)
+        {
+            p.TitleRu.Should().NotBeNullOrWhiteSpace();
+            p.AnatomicalZone.Should().NotBeNullOrWhiteSpace();
+            p.ForceVectorRationale.Should().NotBeNullOrWhiteSpace();
+            p.AdaptiveFormulaBreakdown.Should().NotBeNullOrWhiteSpace();
+            p.InstallationProtocol.Should().NotBeNullOrWhiteSpace();
+            p.MapColorHex.Should().StartWith("#");
+            p.EffectiveThicknessMm.Should().BeGreaterThan(0.0);
+        }
+    }
+
+    [Fact]
+    public void Evaluate_ClampedPrescription_MarksIsSegmentClampedTrue_AndIncludesClampingInFormula()
+    {
+        var input = new HorizontalInputData(
+            LeftMalleolusMm: 0.0,
+            RightMalleolusMm: 0.0,
+            DiscrepancyNature: LegDiscrepancyType.Indeterminate,
+            PiriformisHypertonus: true,
+            IsAntetorsion: true,
+            IsRetrotorsion: false,
+            HipJointBarrier: RotationBarrier.MuscleFunctional,
+            TibialStatus: TibialTorsion.OverRotationOutward,
+            GlobalFlags: GlobalBiomechanicalFlags.None,
+            Activity: PatientActivityLevel.Sedentary
+        );
+
+        var report = _engine.Evaluate(input);
+
+        var forefootItems = report.Prescriptions.Where(p => p.Placement is WedgePlacementType.AnteriorLateral or WedgePlacementType.AnteriorMedial).ToList();
+        forefootItems.Should().NotBeEmpty();
+        forefootItems.Should().AllSatisfy(p =>
+        {
+            p.IsSegmentClamped.Should().BeTrue();
+            p.AdaptiveFormulaBreakdown.Should().Contain("демпфер лимита 6 мм");
+        });
+    }
 }
+
+
