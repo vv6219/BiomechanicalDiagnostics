@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/OrthoClinic.App/OrthoClinic.App.csproj" />
+    <Project Path="src/OrthoClinic.Core/OrthoClinic.Core.csproj" />
+    <Project Path="src/OrthoClinic.Infrastructure/OrthoClinic.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/OrthoClinic.Tests/OrthoClinic.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:drawables="clr-namespace:OrthoClinic.UI.Drawables"
+             xmlns:vm="clr-namespace:OrthoClinic.UI.ViewModels"
+             xmlns:converters="clr-namespace:OrthoClinic.UI.Converters"
+             x:Class="OrthoClinic.UI.Views.HorizontalAssessmentView"
+             x:DataType="vm:HorizontalTestsViewModel"
+             BackgroundColor="#0F172A"
+             Title="Клиническая диагностика и подбор клиньев">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:NotNullConverter x:Key="NotNullConverter" />
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+            <converters:EnumEqualsConverter x:Key="EnumEqualsConverter" />
+            <converters:EnumToColorConverter x:Key="EnumToColorConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="18">
+
+            <!-- ЗАГОЛОВОК КЛИНИЧЕСКОЙ СТАНЦИИ -->
+            <Border BackgroundColor="#1E293B" Padding="14" Stroke="#334155" StrokeShape="RoundRectangle 14">
+                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" RowSpacing="6">
+                    <VerticalStackLayout Grid.Column="0">
+                        <Label Text="ОРТОПЕДИЧЕСКАЯ РАБОЧАЯ СТАНЦИЯ" TextColor="#38BDF8" FontAttributes="Bold" FontSize="13" />
+                        <Label Text="Горизонтальный протокол мануального тестирования" TextColor="#94A3B8" FontSize="11" />
+                    </VerticalStackLayout>
+                    <Border Grid.Column="1" BackgroundColor="#0F172A" Stroke="#38BDF8" Padding="8,4" StrokeShape="RoundRectangle 8">
+                        <Label Text="Formthotics / .NET 10" TextColor="#38BDF8" FontSize="10" FontAttributes="Bold" />
+                    </Border>
+                    <!-- Данные пациента -->
+                    <Grid Grid.Row="1" Grid.ColumnSpan="2" ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,6,0,0">
+                        <Entry Placeholder="ID Пациента" Text="{Binding PatientId}" TextColor="White" PlaceholderColor="#64748B" FontSize="12" BackgroundColor="#0F172A" HeightRequest="38" />
+                        <Entry Grid.Column="1" Placeholder="ФИО Пациента" Text="{Binding PatientFullName}" TextColor="White" PlaceholderColor="#64748B" FontSize="12" BackgroundColor="#0F172A" HeightRequest="38" />
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- ШАГ 1: ОЦЕНКА ДЛИНЫ НОГ И ТОПОЛОГИЯ НАТЯЖЕНИЯ -->
+            <Border BackgroundColor="#1E293B" Padding="14" Stroke="#334155" StrokeShape="RoundRectangle 14">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Тест 1: Взаимное положение лодыжек (Кушетка)" TextColor="#38BDF8" FontAttributes="Bold" FontSize="14"/>
+                        <Label Grid.Column="1" Text="{Binding CurrentDelta, StringFormat='ΔL: {0:F1} мм'}" TextColor="#F59E0B" FontAttributes="Bold" FontSize="13"/>
+                    </Grid>
+
+                    <GraphicsView HeightRequest="130" HorizontalOptions="FillAndExpand">
+                        <GraphicsView.Drawable>
+                            <drawables:LegLengthDiscrepancyDrawable 
+                                LeftOffset="{Binding LeftMalleolus}" 
+                                RightOffset="{Binding RightMalleolus}"/>
+                        </GraphicsView.Drawable>
+                    </GraphicsView>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Grid.Column="0" Spacing="4">
+                            <Label Text="{Binding LeftMalleolus, StringFormat='Левая лодыжка: {0:F1} мм'}" TextColor="#94A3B8" FontSize="11"/>
+                            <Slider Minimum="-15" Maximum="15" Value="{Binding LeftMalleolus}"/>
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="{Binding RightMalleolus, StringFormat='Правая лодыжка: {0:F1} мм'}" TextColor="#94A3B8" FontSize="11"/>
+                            <Slider Minimum="-15" Maximum="15" Value="{Binding RightMalleolus}"/>
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <!-- ОСТЕОПАТИЧЕСКИЙ БАРЬЕР -->
+                    <Border IsVisible="{Binding IsOsteopathicAlertActive}" BackgroundColor="#450A0A" Stroke="#DC2626" Padding="12" StrokeShape="RoundRectangle 10">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="⚠ Показано применение дополнительных остеопатических тестов" TextColor="#FCA5A5" FontAttributes="Bold" FontSize="13"/>
+                            <Label Text="Выполните маневр Вебера-Барстоу для дифференциации перекоса таза:" TextColor="#E2E8F0" FontSize="11"/>
+                            <HorizontalStackLayout Spacing="10">
+                                <Button Text="Анатомическое" Command="{Binding SetDiscrepancyTypeCommand}" CommandParameter="TrueAnatomical" BackgroundColor="#DC2626" TextColor="White" HeightRequest="38" CornerRadius="8"/>
+                                <Button Text="Функциональное (Таз)" Command="{Binding SetDiscrepancyTypeCommand}" CommandParameter="FunctionalPelvic" BackgroundColor="#B91C1C" TextColor="White" HeightRequest="38" CornerRadius="8"/>
+                            </HorizontalStackLayout>
+                            <Label Text="{Binding DiscrepancyNature, StringFormat='Текущий статус: {0}'}" TextColor="#FEF08A" FontSize="10" FontAttributes="Italic"/>
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ШАГ 2: ТЕСТ РОТАТОРОВ (ГРУШЕВИДНЫЕ МЫШЦЫ) -->
+            <Border BackgroundColor="#1E293B" Padding="14" Stroke="#334155" StrokeShape="RoundRectangle 14">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Тест 2: Тест ротаторов (Грушевидные мышцы)" TextColor="#38BDF8" FontAttributes="Bold" FontSize="14"/>
+                    <Label Text="Оценка пассивной внутренней ротации бедер на кушетке." TextColor="#94A3B8" FontSize="11"/>
+                    <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                        <Label Text="Выявлен гипертонус / наружный разворот стоп" TextColor="White" VerticalOptions="Center" FontSize="12"/>
+                        <Switch Grid.Column="1" IsToggled="{Binding PiriformisTension}" OnColor="#0284C7" ThumbColor="#38BDF8"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ШАГ 3: ИЗОЛИРОВАННАЯ РОТАЦИЯ БЕДРА -->
+            <Border BackgroundColor="#1E293B" Padding="14" Stroke="#334155" StrokeShape="RoundRectangle 14">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Тест 3: Изолированная ротация шейки бедра" TextColor="#38BDF8" FontAttributes="Bold" FontSize="14"/>
+                    <Label Text="Дифференциация торсии бедра и характера суставного барьера." TextColor="#94A3B8" FontSize="11"/>
+
+                    <HorizontalStackLayout Spacing="10">
+                        <Button Text="Антеторсия" Command="{Binding ToggleAntetorsionCommand}" 
+                                BackgroundColor="{Binding Antetorsion, Converter={StaticResource EnumToColorConverter}, ConverterParameter='True'}"
+                                TextColor="White" CornerRadius="8" HeightRequest="38"/>
+                        <Button Text="Ретроторсия" Command="{Binding ToggleRetrotorsionCommand}" 
+                                BackgroundColor="{Binding Retrotorsion, Converter={StaticResource EnumToColorConverter}, ConverterParameter='True'}"
+                                TextColor="White" CornerRadius="8" HeightRequest="38"/>
+                    </HorizontalStackLayout>
+
+                    <Label Text="Характер барьера вращения:" TextColor="#94A3B8" FontSize="11" Margin="0,4,0,0"/>
+                    <HorizontalStackLayout Spacing="10">
+                        <Button Text="Мышечный (функциональный)" Command="{Binding SetBarrierTypeCommand}" CommandParameter="MuscleFunctional" 
+                                BackgroundColor="{Binding Barrier, Converter={StaticResource EnumToColorConverter}, ConverterParameter='MuscleFunctional'}" 
+                                TextColor="White" CornerRadius="8" HeightRequest="36" FontSize="11"/>
+                        <Button Text="Костный (анатомический)" Command="{Binding SetBarrierTypeCommand}" CommandParameter="BoneAnatomical" 
+                                BackgroundColor="{Binding Barrier, Converter={StaticResource EnumToColorConverter}, ConverterParameter='BoneAnatomical'}" 
+                                TextColor="White" CornerRadius="8" HeightRequest="36" FontSize="11"/>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ШАГ 4: ТОРСИЯ ГОЛЕНИ (ПАЛИМПСЕСТ) -->
+            <Border BackgroundColor="#1E293B" Padding="14" Stroke="#334155" StrokeShape="RoundRectangle 14">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Тест 4: Торсия большеберцовой кости относительно мыщелков" TextColor="#38BDF8" FontAttributes="Bold" FontSize="14"/>
+                    <GraphicsView HeightRequest="150" HorizontalOptions="FillAndExpand">
+                        <GraphicsView.Drawable>
+                            <drawables:TibialTorsionPalimpsestDrawable State="{Binding TibialState}"/>
+                        </GraphicsView.Drawable>
+                    </GraphicsView>
+                    <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+                        <Button Text="Недокрут внутрь" Command="{Binding SetTibialStateCommand}" CommandParameter="UnderRotationInward" 
+                                BackgroundColor="{Binding TibialState, Converter={StaticResource EnumToColorConverter}, ConverterParameter='UnderRotationInward'}" 
+                                TextColor="White" CornerRadius="8" HeightRequest="38" FontSize="12"/>
+                        <Button Text="Норма" Command="{Binding SetTibialStateCommand}" CommandParameter="Normal" 
+                                BackgroundColor="{Binding TibialState, Converter={StaticResource EnumToColorConverter}, ConverterParameter='Normal'}" 
+                                TextColor="White" CornerRadius="8" HeightRequest="38" FontSize="12"/>
+                        <Button Text="Перекрут кнаружи" Command="{Binding SetTibialStateCommand}" CommandParameter="OverRotationOutward" 
+                                BackgroundColor="{Binding TibialState, Converter={StaticResource EnumToColorConverter}, ConverterParameter='OverRotationOutward'}" 
+                                TextColor="White" CornerRadius="8" HeightRequest="38" FontSize="12"/>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ШАГ 5: ДИНАМИЧЕСКИЕ МАРКЕРЫ (FORMTHOTICS) И УРОВЕНЬ АКТИВНОСТИ -->
+            <Border BackgroundColor="#1E293B" Padding="14" Stroke="#334155" StrokeShape="RoundRectangle 14">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Тест 5: Динамические пробы и активность пациента" TextColor="#38BDF8" FontAttributes="Bold" FontSize="14"/>
+                    
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Стопа заваливается внутрь (5-й тест Formthotics)" TextColor="White" FontSize="12" VerticalOptions="Center"/>
+                        <Switch Grid.Column="1" IsToggled="{Binding FallsInwardTest5}" OnColor="#0284C7" ThumbColor="#38BDF8"/>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Пациент заваливается кнаружи при динамической пробе" TextColor="White" FontSize="12" VerticalOptions="Center"/>
+                        <Switch Grid.Column="1" IsToggled="{Binding FallsOutwardTest5}" OnColor="#0284C7" ThumbColor="#38BDF8"/>
+                    </Grid>
+
+                    <Label Text="Уровень метаболической и спортивной активности:" TextColor="#94A3B8" FontSize="11" Margin="0,4,0,0"/>
+                    <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="6">
+                        <Button Grid.Column="0" Text="Малоакт." Command="{Binding SetActivityLevelCommand}" CommandParameter="Sedentary" 
+                                BackgroundColor="{Binding Activity, Converter={StaticResource EnumToColorConverter}, ConverterParameter='Sedentary'}" 
+                                TextColor="White" CornerRadius="8" FontSize="10" HeightRequest="36"/>
+                        <Button Grid.Column="1" Text="Умерен." Command="{Binding SetActivityLevelCommand}" CommandParameter="Moderate" 
+                                BackgroundColor="{Binding Activity, Converter={StaticResource EnumToColorConverter}, ConverterParameter='Moderate'}" 
+                                TextColor="White" CornerRadius="8" FontSize="10" HeightRequest="36"/>
+                        <Button Grid.Column="2" Text="Высокий" Command="{Binding SetActivityLevelCommand}" CommandParameter="Active" 
+                                BackgroundColor="{Binding Activity, Converter={StaticResource EnumToColorConverter}, ConverterParameter='Active'}" 
+                                TextColor="White" CornerRadius="8" FontSize="10" HeightRequest="36"/>
+                        <Button Grid.Column="3" Text="Спорт" Command="{Binding SetActivityLevelCommand}" CommandParameter="Athlete" 
+                                BackgroundColor="{Binding Activity, Converter={StaticResource EnumToColorConverter}, ConverterParameter='Athlete'}" 
+                                TextColor="White" CornerRadius="8" FontSize="10" HeightRequest="36"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ГЛАВНАЯ КНОПКА РАСЧЕТА КЛИНЬЕВ -->
+            <Button Text="Выполнить биомеханический расчет клиньев" 
+                    Command="{Binding RunEvaluationCommand}"
+                    IsEnabled="{Binding CanCalculate}"
+                    BackgroundColor="#0284C7" TextColor="White" FontAttributes="Bold" HeightRequest="50" CornerRadius="12"/>
+
+            <!-- ПРЕДУПРЕЖДЕНИЕ ПРИ БЛОКИРОВКЕ РАСЧЕТА -->
+            <Label Text="⚠ Расчет заблокирован: требуется выполнить маневр Вебера-Барстоу (Тест 1)" 
+                   TextColor="#EF4444" FontSize="11" HorizontalOptions="Center" 
+                   IsVisible="{Binding CanCalculate, Converter={StaticResource InvertedBoolConverter}}"/>
+
+            <!-- СТАТУСНОЕ УВЕДОМЛЕНИЕ -->
+            <Label Text="{Binding StatusNotification}" TextColor="#38BDF8" FontSize="12" HorizontalOptions="Center" FontAttributes="Italic"/>
+
+            <!-- РЕЗУЛЬТИРУЮЩИЙ БЛОК: КЛИНИЧЕСКОЕ ЗАКЛЮЧЕНИЕ И ИНТЕРФЕРЕНЦИОННАЯ СТОЯЧАЯ ВОЛНА -->
+            <Border IsVisible="{Binding EvaluationResult, Converter={StaticResource NotNullConverter}}" BackgroundColor="#1E293B" Padding="14" StrokeShape="RoundRectangle 14">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Спецификация индивидуальной коррекции:" TextColor="#38BDF8" FontAttributes="Bold" FontSize="14"/>
+
+                    <!-- КАНВАС 1: ПРОФИЛЬ КЛИНА И СТОЯЧАЯ ВОЛНА СТРЕССА -->
+                    <GraphicsView HeightRequest="100">
+                        <GraphicsView.Drawable>
+                            <drawables:AdaptiveWedgeDrawable 
+                                HasConflict="{Binding EvaluationResult.IsComplexTorsionConflict}" 
+                                Phase="{Binding WavePhase}"/>
+                        </GraphicsView.Drawable>
+                    </GraphicsView>
+
+                    <!-- КАНВАС 2: ПЛАНТАРНАЯ КАРТА СТЕЛЬКИ С ТОПОГРАФИЕЙ КЛИНЬЕВ -->
+                    <Label Text="Топография наложения клиньев на стельке:" TextColor="#94A3B8" FontSize="11"/>
+                    <GraphicsView HeightRequest="190">
+                        <GraphicsView.Drawable>
+                            <drawables:PlantarInsoleMapDrawable Prescriptions="{Binding EvaluationResult.Prescriptions}"/>
+                        </GraphicsView.Drawable>
+                    </GraphicsView>
+
+                    <!-- СПИСОК ВЫПИСАННЫХ КЛИНЬЕВ -->
+                    <Label Text="Назначенные элементы:" TextColor="#E2E8F0" FontSize="12" FontAttributes="Bold"/>
+                    <CollectionView ItemsSource="{Binding EvaluationResult.Prescriptions}">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Border BackgroundColor="#0F172A" Margin="0,4" Padding="12" StrokeShape="RoundRectangle 8" Stroke="#334155">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="{Binding Placement}" TextColor="White" FontAttributes="Bold" FontSize="13"/>
+                                            <Label Text="{Binding BiomechanicalReason}" TextColor="#94A3B8" FontSize="11"/>
+                                            <Label Text="{Binding ControlTestMandate, StringFormat='Контроль: {0}'}" TextColor="#38BDF8" FontSize="10"/>
+                                            <Label Text="{Binding RecommendedDurometer, StringFormat='Материал: {0}'}" TextColor="#A78BFA" FontSize="10"/>
+                                        </VerticalStackLayout>
+                                        <Label Grid.Column="1" Text="{Binding EffectiveThicknessMm, StringFormat='{0:F1} мм'}" TextColor="#10B981" FontAttributes="Bold" FontSize="15" VerticalOptions="Center"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <!-- КЛИНИЧЕСКИЕ ПРЕДУПРЕЖДЕНИЯ -->
+                    <VerticalStackLayout Spacing="6" Margin="0,6,0,0">
+                        <Label Text="Клинические алерты и противопоказания:" TextColor="#FCA5A5" FontSize="12" FontAttributes="Bold"/>
+                        <CollectionView ItemsSource="{Binding EvaluationResult.ClinicalAlerts}">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Label Text="{Binding StringFormat='• {0}'}" TextColor="#F87171" FontSize="11"/>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+
+                    <!-- ИНДИВИДУАЛЬНЫЙ ГРАФИК НОШЕНИЯ -->
+                    <VerticalStackLayout Spacing="4" Margin="0,6,0,0">
+                        <Label Text="Протокол адаптации и реабилитации:" TextColor="#93C5FD" FontSize="12" FontAttributes="Bold"/>
+                        <CollectionView ItemsSource="{Binding EvaluationResult.WearInSchedule}">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Label Text="{Binding StringFormat='✓ {0}'}" TextColor="#CBD5E1" FontSize="11"/>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+
+                    <!-- КНОПКА АТОМАРНОГО СОХРАНЕНИЯ В ЗАШИФРОВАННУЮ БД -->
+                    <Button Text="Сохранить в зашифрованную медицинскую карту" 
+                            Command="{Binding SaveExamRecordCommand}"
+                            IsEnabled="{Binding IsSaving, Converter={StaticResource InvertedBoolConverter}}"
+                            BackgroundColor="#10B981" TextColor="White" FontAttributes="Bold" HeightRequest="46" CornerRadius="10" Margin="0,8,0,0"/>
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
