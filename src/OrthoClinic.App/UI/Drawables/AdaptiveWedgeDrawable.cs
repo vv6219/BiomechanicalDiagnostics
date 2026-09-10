@@ -1,15 +1,39 @@
 namespace OrthoClinic.UI.Drawables;
 
+using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
 
 /// <summary>
 /// Векторный канвас Теста 5: Профиль адаптивного клина и интерференция стоячей волны при торсионном конфликте.
 /// </summary>
-public sealed class AdaptiveWedgeDrawable : IDrawable
+public sealed class AdaptiveWedgeDrawable : BindableObject, IDrawable
 {
-    public bool HasConflict { get; set; }
-    public double ActivityRatio { get; set; } = 1.0;
-    public double Phase { get; set; }
+    public static readonly BindableProperty HasConflictProperty = BindableProperty.Create(
+        nameof(HasConflict), typeof(bool), typeof(AdaptiveWedgeDrawable), false);
+
+    public static readonly BindableProperty ActivityRatioProperty = BindableProperty.Create(
+        nameof(ActivityRatio), typeof(double), typeof(AdaptiveWedgeDrawable), 1.0);
+
+    public static readonly BindableProperty PhaseProperty = BindableProperty.Create(
+        nameof(Phase), typeof(double), typeof(AdaptiveWedgeDrawable), 0.0);
+
+    public bool HasConflict
+    {
+        get => (bool)GetValue(HasConflictProperty);
+        set => SetValue(HasConflictProperty, value);
+    }
+
+    public double ActivityRatio
+    {
+        get => (double)GetValue(ActivityRatioProperty);
+        set => SetValue(ActivityRatioProperty, value);
+    }
+
+    public double Phase
+    {
+        get => (double)GetValue(PhaseProperty);
+        set => SetValue(PhaseProperty, value);
+    }
 
     public void Draw(ICanvas canvas, RectF dirtyRect)
     {

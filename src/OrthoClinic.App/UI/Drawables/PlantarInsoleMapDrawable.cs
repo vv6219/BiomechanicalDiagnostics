@@ -1,5 +1,6 @@
 namespace OrthoClinic.UI.Drawables;
 
+using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
 using OrthoClinic.Core.Domain;
 
@@ -7,9 +8,16 @@ using OrthoClinic.Core.Domain;
 /// Интерактивная карта плантарной поверхности стопы и ортопедической стельки
 /// с визуализацией точных зон наложения выписанных клиньев и их толщин.
 /// </summary>
-public sealed class PlantarInsoleMapDrawable : IDrawable
+public sealed class PlantarInsoleMapDrawable : BindableObject, IDrawable
 {
-    public IReadOnlyList<WedgeItemPrescription>? Prescriptions { get; set; }
+    public static readonly BindableProperty PrescriptionsProperty = BindableProperty.Create(
+        nameof(Prescriptions), typeof(IReadOnlyList<WedgeItemPrescription>), typeof(PlantarInsoleMapDrawable), null);
+
+    public IReadOnlyList<WedgeItemPrescription>? Prescriptions
+    {
+        get => (IReadOnlyList<WedgeItemPrescription>?)GetValue(PrescriptionsProperty);
+        set => SetValue(PrescriptionsProperty, value);
+    }
 
     public void Draw(ICanvas canvas, RectF dirtyRect)
     {
@@ -59,27 +67,22 @@ public sealed class PlantarInsoleMapDrawable : IDrawable
             switch (p.Placement)
             {
                 case WedgePlacementType.AnteriorLateral:
-                    // Передний наружный (латеральный плюсневой)
                     DrawWedgeSpot(canvas, cx + 26, cy - 60, 16, 12, "#38BDF8", $"{p.EffectiveThicknessMm:F1}");
                     break;
 
                 case WedgePlacementType.AnteriorMedial:
-                    // Передний медиальный (под головку 1-й плюсневой)
                     DrawWedgeSpot(canvas, cx - 22, cy - 65, 18, 14, "#F59E0B", $"{p.EffectiveThicknessMm:F1}");
                     break;
 
                 case WedgePlacementType.PosteriorMedial:
-                    // Задний медиальный (поддержка ладьевидной кости)
                     DrawWedgeSpot(canvas, cx - 18, cy + 15, 16, 22, "#10B981", $"{p.EffectiveThicknessMm:F1}");
                     break;
 
                 case WedgePlacementType.FifthMetatarsalBase:
-                    // Основание 5-й плюсневой
                     DrawWedgeSpot(canvas, cx + 32, cy - 10, 14, 18, "#EC4899", $"{p.EffectiveThicknessMm:F1}");
                     break;
 
                 case WedgePlacementType.HeelLiftCompensator:
-                    // Подпяточник (пятка)
                     DrawWedgeSpot(canvas, cx, cy + 70, 28, 18, "#EF4444", $"{p.EffectiveThicknessMm:F1}");
                     break;
             }

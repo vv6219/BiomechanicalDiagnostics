@@ -5,6 +5,11 @@
              x:Class="OrthoClinic.App">
     <Application.Resources>
         <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
+                <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
             <Color x:Key="Primary">#0284C7</Color>
             <Color x:Key="Secondary">#38BDF8</Color>
             <Color x:Key="Background">#0F172A</Color>

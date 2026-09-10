@@ -1,14 +1,22 @@
 namespace OrthoClinic.UI.Drawables;
 
+using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
 using OrthoClinic.Core.Domain;
 
 /// <summary>
 /// Векторный канвас Теста 4: Палимпсест уровней торсии большеберцовой кости относительно оси мыщелков.
 /// </summary>
-public sealed class TibialTorsionPalimpsestDrawable : IDrawable
+public sealed class TibialTorsionPalimpsestDrawable : BindableObject, IDrawable
 {
-    public TibialTorsion State { get; set; } = TibialTorsion.Normal;
+    public static readonly BindableProperty StateProperty = BindableProperty.Create(
+        nameof(State), typeof(TibialTorsion), typeof(TibialTorsionPalimpsestDrawable), TibialTorsion.Normal);
+
+    public TibialTorsion State
+    {
+        get => (TibialTorsion)GetValue(StateProperty);
+        set => SetValue(StateProperty, value);
+    }
 
     public void Draw(ICanvas canvas, RectF dirtyRect)
     {
